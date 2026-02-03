@@ -41,7 +41,7 @@ class NoteTable(QTableWidget):
             return super().keyPressEvent(event)
 
         key = event.key()
-        if key == 0:
+        if key == 0 or key == Qt.Key.Key_Escape:
             self.bindings.pop(cell_location, None)
         else:
             self.bindings[cell_location] = key
