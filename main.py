@@ -17,6 +17,7 @@ class NoteTable(QTableWidget):
         self.setHorizontalHeaderLabels(list(map(str, music.octaves)))
         self.setVerticalHeaderLabels(music.notes)
         self.setSelectionMode(QTableWidget.SingleSelection)
+        self.setWindowTitle("Microphone Controller")
 
         for octave in range(music.octave_count):
             for note_i, note in enumerate(music.notes):
