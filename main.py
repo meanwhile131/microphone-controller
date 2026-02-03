@@ -1,5 +1,5 @@
 import sys
-from PySide6.QtCore import Slot, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent, QKeySequence, QFocusEvent
 from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem
 import music
@@ -28,7 +28,11 @@ class NoteTable(QTableWidget):
         self.setEditTriggers(QTableWidget.NoEditTriggers)
 
     def keyPressEvent(self, event: QKeyEvent):
-        cell = self.currentItem()
+        selected_items = self.selectedItems()
+        if not selected_items:
+            return super().keyPressEvent(event)
+        # there can only be one because of QTableWidget.SingleSelection
+        cell = selected_items[0]
         cell_location = (cell.row(), cell.column())
         if event.isAutoRepeat() or cell is None:
             return super().keyPressEvent(event)
