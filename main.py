@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeyEvent, QKeySequence, QFocusEvent
-from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem
+from PySide6.QtGui import QKeyEvent, QKeySequence
+from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QHeaderView
 import music
 
 app = QApplication(sys.argv)
@@ -18,6 +18,8 @@ class NoteTable(QTableWidget):
         self.setVerticalHeaderLabels(music.notes)
         self.setSelectionMode(QTableWidget.SingleSelection)
         self.setWindowTitle("Microphone Controller")
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         for octave in range(music.octave_count):
             for note_i, note in enumerate(music.notes):
