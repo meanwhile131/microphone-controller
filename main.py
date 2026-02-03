@@ -8,9 +8,9 @@ app = QApplication(sys.argv)
 
 
 class NoteTable(QTableWidget):
-    bindings = {}
+    bindings: dict
 
-    def __init__(self):
+    def __init__(self, bindings={}):
         super().__init__()
         self.setRowCount(music.note_count)
         self.setColumnCount(music.octave_count)
@@ -20,13 +20,14 @@ class NoteTable(QTableWidget):
         self.setWindowTitle("Microphone Controller")
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.bindings = bindings
 
         for octave in range(music.octave_count):
             for note_i, note in enumerate(music.notes):
-                note_cell = QTableWidgetItem(
-                    f"{music.note_to_freq[octave][note]:.1f}")
+                note_cell = QTableWidgetItem()
                 note_cell.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.setItem(note_i, octave, note_cell)
+                self.update_cell_text((note_i, octave))
 
         self.setEditTriggers(QTableWidget.NoEditTriggers)
 
@@ -59,8 +60,8 @@ class NoteTable(QTableWidget):
             text += f" ({key_sequence})"
         cell.setText(text)
 
-
-note_table = NoteTable()
+bindings = {}
+note_table = NoteTable(bindings)
 note_table.show()
 
 sys.exit(app.exec())
