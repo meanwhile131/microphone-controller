@@ -19,6 +19,8 @@ class FFTPlot(FigureCanvasQTAgg):
         self.fig = Figure()
         self.axes = self.fig.add_subplot()
         self.ln, = self.axes.plot(self.all_freq, np.zeros(self.all_freq.shape))
+        self.noise_floor_line = self.axes.axhline(
+            y=0, color='r', linestyle='-')
         super().__init__(self.fig)
 
         self.__thread = Thread(target=self.handler_thread)
@@ -32,10 +34,11 @@ class FFTPlot(FigureCanvasQTAgg):
             fft_data = abs(np.fft.rfft(audio_data))
 
             self.ln.set_ydata(fft_data)
+            noise_floor = sum(fft_data) / len(fft_data)
+            self.noise_floor_line.set_ydata([noise_floor, noise_floor])
             self.axes.relim()
             self.axes.autoscale_view()
             self.fig.canvas.draw()
-            self.fig.canvas.flush_events()
 
         self.stream.stop_stream()
 
