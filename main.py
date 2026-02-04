@@ -1,8 +1,14 @@
 import sys
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent, QKeySequence
-from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QHeaderView
+from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QHeaderView, QVBoxLayout, QMainWindow, QWidget
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import music
+import numpy as np
+import pyaudio
+from threading import Thread
 
 app = QApplication(sys.argv)
 
@@ -60,8 +66,68 @@ class NoteTable(QTableWidget):
             text += f" ({key_sequence})"
         cell.setText(text)
 
-bindings = {}
-note_table = NoteTable(bindings)
-note_table.show()
 
-sys.exit(app.exec())
+class FFTPlot(FigureCanvasQTAgg):
+    __stop = False
+
+    def __init__(self, bindings: dict, audio: pyaudio.PyAudio, sample_rate=44100):
+        self.bindings = bindings
+        self.sample_rate = sample_rate
+        self.window_length = sample_rate // 4
+        self.stream = audio.open(sample_rate, 1, pyaudio.paFloat32, input=True)
+        self.all_freq = np.fft.rfftfreq(
+            self.window_length, 1./self.sample_rate)
+
+        self.fig = Figure()
+        self.axes = self.fig.add_subplot()
+        self.ln, = self.axes.plot(self.all_freq, np.zeros(self.all_freq.shape))
+        super().__init__(self.fig)
+
+        self.__thread = Thread(target=self.handler_thread)
+        self.__thread.start()
+
+    def handler_thread(self):
+        self.stream.start_stream()
+        while not self.__stop:
+            chunk = self.stream.read(self.window_length)
+            audio_data = np.frombuffer(chunk, np.float32)
+            fft_data = abs(np.fft.rfft(audio_data))
+
+            self.ln.set_ydata(fft_data)
+            self.axes.relim()
+            self.axes.autoscale_view()
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+
+        self.stream.stop_stream()
+
+    def stop_thread(self):
+        self.__stop = True
+        self.__thread.join()
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        bindings = {}
+        layout = QVBoxLayout()
+
+        portaudio = pyaudio.PyAudio()
+        plt.ion()
+        self.fft_plot = FFTPlot(bindings, portaudio)
+        note_table = NoteTable(bindings)
+
+        layout.addWidget(note_table, 1)
+        layout.addWidget(self.fft_plot, 1)
+        widget = QWidget()
+        widget.setLayout(layout)
+        self.setCentralWidget(widget)
+
+    def stop(self):
+        self.fft_plot.stop_thread()
+
+
+window = MainWindow()
+window.show()
+app.exec()
+window.stop()
