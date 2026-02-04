@@ -16,8 +16,8 @@ class MainWindow(QMainWindow):
 
         portaudio = pyaudio.PyAudio()
         plt.ion()
-        self.fft_plot = FFTPlot(bindings, portaudio)
         note_table = NoteTable(bindings)
+        self.fft_plot = FFTPlot(bindings, portaudio, cells_update_callback=note_table.set_highlighted_cells)
 
         layout.addWidget(note_table, 1)
         layout.addWidget(self.fft_plot, 1)

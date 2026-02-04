@@ -3,18 +3,20 @@ import pyaudio
 import numpy as np
 from threading import Thread
 from matplotlib.figure import Figure
+import music
 
 
 class FFTPlot(FigureCanvasQTAgg):
     __stop = False
 
-    def __init__(self, bindings: dict, audio: pyaudio.PyAudio, sample_rate=44100):
+    def __init__(self, bindings: dict, audio: pyaudio.PyAudio, sample_rate=44100, cells_update_callback = lambda highlighted_cells: None):
         self.bindings = bindings
         self.sample_rate = sample_rate
         self.window_length = sample_rate // 4
         self.stream = audio.open(sample_rate, 1, pyaudio.paFloat32, input=True)
         self.all_freq = np.fft.rfftfreq(
             self.window_length, 1./self.sample_rate)
+        self.cells_update_callback = cells_update_callback
 
         self.fig = Figure()
         self.axes = self.fig.add_subplot()
@@ -39,6 +41,14 @@ class FFTPlot(FigureCanvasQTAgg):
             self.axes.relim()
             self.axes.autoscale_view()
             self.fig.canvas.draw()
+            highlighted_cells = set()
+            for note_i, note in enumerate(music.notes):
+                for octave in range(music.octave_count):
+                    freq = music.note_to_freq[octave][note]
+                    fft_i = round(freq / self.sample_rate * self.window_length)
+                    if fft_data[fft_i] > 20:
+                        highlighted_cells.add((note_i, octave))
+            self.cells_update_callback(highlighted_cells)
 
         self.stream.stop_stream()
 

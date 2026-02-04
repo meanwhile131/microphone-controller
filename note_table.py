@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
-from PySide6.QtGui import QKeyEvent, QKeySequence
+from PySide6.QtGui import QKeyEvent, QKeySequence, QColor
 from PySide6.QtCore import Qt
 import music
 
@@ -25,7 +25,7 @@ class NoteTable(QTableWidget):
                 note_cell = QTableWidgetItem()
                 note_cell.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.setItem(note_i, octave, note_cell)
-                self.update_cell_text((note_i, octave))
+                self.update_cell((note_i, octave))
 
     def keyPressEvent(self, event: QKeyEvent):
         selected_items = self.selectedItems()
@@ -42,10 +42,10 @@ class NoteTable(QTableWidget):
             self.bindings.pop(cell_location, None)
         else:
             self.bindings[cell_location] = key
-        self.update_cell_text(cell_location)
+        self.update_cell(cell_location)
         self.clearSelection()
 
-    def update_cell_text(self, cell_location: tuple[int, int]):
+    def update_cell(self, cell_location: tuple[int, int]):
         note_i, octave = cell_location
         cell: QTableWidgetItem = self.item(note_i, octave)
         text = f"{music.note_to_freq[octave][music.notes[note_i]]:.1f}"
@@ -55,3 +55,13 @@ class NoteTable(QTableWidget):
             key_sequence = QKeySequence(bind_key).toString()
             text += f" ({key_sequence})"
         cell.setText(text)
+
+    def set_highlighted_cells(self, highlighted_cells):
+        for note_i in range(music.note_count):
+            for octave in range(music.octave_count):
+                cell: QTableWidgetItem = self.item(note_i, octave)
+                cell_location = (note_i, octave)
+                if cell_location in highlighted_cells:
+                    cell.setBackground(QColor(0, 255, 0))
+                else:
+                    cell.setBackground(QColor(255, 255, 255))
