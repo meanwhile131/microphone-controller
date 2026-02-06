@@ -33,7 +33,12 @@ class MainWindow(QMainWindow):
         self.binding_handler.stop_thread()
 
 
-window = MainWindow()
-window.show()
-app.exec()
-window.stop()
+def main():
+    window = MainWindow()
+    window.show()
+    app.exec()
+    window.stop()
+
+
+if __name__ == "__main__":
+    main()
