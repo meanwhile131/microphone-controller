@@ -1,9 +1,10 @@
 from threading import Thread
+import time
 import music
 import numpy as np
 import pyaudio
 from evdev import UInput, ecodes
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QObject, Signal
 
 
 QT_TO_EVDEV_MAP = {
@@ -103,51 +104,108 @@ QT_TO_EVDEV_MAP = {
 }
 
 
-class AudioBindingHandler:
+class AudioBindingHandler(QObject):
     __stop = False
 
-    def __init__(self, audio: pyaudio.PyAudio, bindings: dict[tuple[int, int]: int] = {}, sample_rate=44100, cells_update_callback=lambda highlighted_cells: None, fft_update_callback=lambda fft_data: None):
-        self.bindings = bindings
+    # Emitted from the worker thread; Qt delivers them to the main thread via
+    # queued connections so the GUI callbacks run on the GUI thread.
+    _fft_updated = Signal(object)
+    _cells_updated = Signal(object)
+
+    # Detection thresholds (peak magnitude in a small band around each note).
+    PRESS_THRESHOLD = 10
+    RELEASE_THRESHOLD = 5
+    # Analysis step: response latency is ~one hop. Plot redraws at most at this rate.
+    HOP_DIVISOR = 100        # hop = sample_rate / HOP_DIVISOR (~10 ms)
+    PLOT_INTERVAL = 1 / 30   # seconds between plot redraws
+
+    def __init__(self, audio: pyaudio.PyAudio, bindings: dict[tuple[int, int]: int] = None, sample_rate=44100, cells_update_callback=lambda highlighted_cells: None, fft_update_callback=lambda fft_data: None):
+        super().__init__()
+        self.bindings = bindings if bindings is not None else {}
         self.cells_update_callback = cells_update_callback
         self.fft_update_callback = fft_update_callback
         self.sample_rate = sample_rate
+        # Large FFT window keeps frequency resolution; the small hop below keeps
+        # the response latency low by sliding the window often.
         self.window_length = sample_rate // 4
+        self.hop = sample_rate // self.HOP_DIVISOR
+
+        self.buffer = np.zeros(self.window_length, dtype=np.float32)
+        self.window = np.hanning(self.window_length).astype(np.float32)
+
         self.stream = audio.open(sample_rate, 1, pyaudio.paFloat32, input=True,
-                                 frames_per_buffer=self.window_length)
+                                 frames_per_buffer=self.hop)
         self.pressed_keys = set()
+        self.active = {}
+        self._last_highlighted = set()
+        self._last_plot_time = 0.0
 
         self.ui = UInput()
+
+        self._fft_updated.connect(self._emit_fft_update)
+        self._cells_updated.connect(self._emit_cells_update)
 
         self.__thread = Thread(target=self.handler_thread)
         self.__thread.start()
 
+    def _emit_fft_update(self, fft_data):
+        self.fft_update_callback(fft_data)
+
+    def _emit_cells_update(self, highlighted_cells):
+        self.cells_update_callback(highlighted_cells)
+
     def handler_thread(self):
         self.stream.start_stream()
         while not self.__stop:
-            chunk = self.stream.read(self.window_length,
-                                     exception_on_overflow=False)
-            audio_data = np.frombuffer(chunk, np.float32)
-            fft_data = abs(np.fft.rfft(audio_data))
-            self.fft_update_callback(fft_data)
+            chunk = self.stream.read(self.hop, exception_on_overflow=False)
+            self.buffer = np.roll(self.buffer, -self.hop)
+            self.buffer[-self.hop:] = np.frombuffer(chunk, np.float32)
+
+            # Windowed FFT, scaled to roughly match the previous un-windowed
+            # magnitude so the thresholds stay meaningful.
+            fft_data = abs(np.fft.rfft(self.buffer * self.window)) * 2
+
+            now = time.monotonic()
+            if now - self._last_plot_time >= self.PLOT_INTERVAL:
+                self._last_plot_time = now
+                self._fft_updated.emit(fft_data)
 
             highlighted_cells = set()
-            for note_i, octave in self.bindings:  # only check bound notes
-                note = music.notes[note_i]
-                freq = music.note_to_freq[octave][note]
-                fft_i = round(freq / self.sample_rate * self.window_length)
-                key = QT_TO_EVDEV_MAP[self.bindings[(note_i, octave)]]
-                if fft_data[fft_i] > 20:
-                    highlighted_cells.add((note_i, octave))
-                    if key not in self.pressed_keys:
-                        self.ui.write(ecodes.EV_KEY, key, 1)
+            try:
+                for note_i, octave in self.bindings:  # only check bound notes
+                    note = music.notes[note_i]
+                    freq = music.note_to_freq[octave][note]
+                    fft_i = round(freq / self.sample_rate * self.window_length)
+                    fft_i = min(max(fft_i, 0), len(fft_data) - 1)
+                    mag = fft_data[max(0, fft_i - 2):fft_i + 3].max()
+                    key = QT_TO_EVDEV_MAP[self.bindings[(note_i, octave)]]
+
+                    location = (note_i, octave)
+                    was_active = self.active.get(location, False)
+                    threshold = (self.RELEASE_THRESHOLD if was_active
+                                 else self.PRESS_THRESHOLD)
+                    is_active = mag > threshold
+                    self.active[location] = is_active
+
+                    if is_active:
+                        highlighted_cells.add(location)
+                        if key not in self.pressed_keys:
+                            self.ui.write(ecodes.EV_KEY, key, 1)
+                            self.ui.syn()
+                            self.pressed_keys.add(key)
+                        continue
+                    if key in self.pressed_keys:
+                        self.ui.write(ecodes.EV_KEY, key, 0)
                         self.ui.syn()
-                        self.pressed_keys.add(key)
-                    continue
-                if key in self.pressed_keys:
-                    self.ui.write(ecodes.EV_KEY, key, 0)
-                    self.ui.syn()
-                    self.pressed_keys.remove(key)
-            self.cells_update_callback(highlighted_cells)
+                        self.pressed_keys.remove(key)
+            except RuntimeError:
+                # bindings were modified on the GUI thread mid-iteration;
+                # skip this frame, the next one is only ~10 ms away.
+                continue
+
+            if highlighted_cells != self._last_highlighted:
+                self._last_highlighted = highlighted_cells
+                self._cells_updated.emit(highlighted_cells)
 
         self.stream.stop_stream()
         self.ui.close()

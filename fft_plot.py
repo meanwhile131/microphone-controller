@@ -14,4 +14,4 @@ class FFTPlot(FigureCanvasQTAgg):
 
     def update_plot(self, fft_data):
         self.ln.set_ydata(fft_data[1:250])
-        self.fig.canvas.draw()
+        self.fig.canvas.draw_idle()
