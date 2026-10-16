@@ -112,7 +112,8 @@ class AudioBindingHandler:
         self.fft_update_callback = fft_update_callback
         self.sample_rate = sample_rate
         self.window_length = sample_rate // 4
-        self.stream = audio.open(sample_rate, 1, pyaudio.paFloat32, input=True)
+        self.stream = audio.open(sample_rate, 1, pyaudio.paFloat32, input=True,
+                                 frames_per_buffer=self.window_length)
         self.pressed_keys = set()
 
         self.ui = UInput()
@@ -123,7 +124,8 @@ class AudioBindingHandler:
     def handler_thread(self):
         self.stream.start_stream()
         while not self.__stop:
-            chunk = self.stream.read(self.window_length)
+            chunk = self.stream.read(self.window_length,
+                                     exception_on_overflow=False)
             audio_data = np.frombuffer(chunk, np.float32)
             fft_data = abs(np.fft.rfft(audio_data))
             self.fft_update_callback(fft_data)
