@@ -1,5 +1,5 @@
 import sys
-from PySide6.QtWidgets import QApplication, QVBoxLayout, QMainWindow, QWidget
+from PySide6.QtWidgets import QApplication, QVBoxLayout, QMainWindow, QWidget, QSlider, QHBoxLayout
 import matplotlib.pyplot as plt
 import pyaudio
 from fft_plot import FFTPlot
@@ -16,15 +16,26 @@ class MainWindow(QMainWindow):
 
         portaudio = pyaudio.PyAudio()
         plt.ion()
-        self.binding_handler = AudioBindingHandler(portaudio)
+
+        threshold_slider = QSlider()
+        threshold_slider.setMaximum(40)
+
+        self.binding_handler = AudioBindingHandler(portaudio, threshold_slider)
         note_table = NoteTable(self.binding_handler.bindings)
+        layout.addWidget(note_table, 1)
+
+        plot_layout = QHBoxLayout()
+        layout.addLayout(plot_layout)
+
         self.fft_plot = FFTPlot(
             self.binding_handler.window_length, self.binding_handler.sample_rate)
         self.binding_handler.cells_update_callback = note_table.set_highlighted_cells
-        self.binding_handler.fft_update_callback = self.fft_plot.update_plot
+        self.binding_handler.fft_update_signal.connect(self.fft_plot.update_plot)
+        threshold_slider.valueChanged.connect(self.fft_plot.update_threshold)
+        plot_layout.addWidget(self.fft_plot, 1)
 
-        layout.addWidget(note_table, 1)
-        layout.addWidget(self.fft_plot, 1)
+        plot_layout.addWidget(threshold_slider)
+
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)

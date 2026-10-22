@@ -3,7 +3,7 @@ import music
 import numpy as np
 import pyaudio
 from evdev import UInput, ecodes
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal, QObject
 
 
 QT_TO_EVDEV_MAP = {
@@ -103,18 +103,21 @@ QT_TO_EVDEV_MAP = {
 }
 
 
-class AudioBindingHandler:
+class AudioBindingHandler(QObject):
     __stop = False
+    fft_update_signal = Signal(np.ndarray)
 
-    def __init__(self, audio: pyaudio.PyAudio, bindings: dict[tuple[int, int]: int] = {}, sample_rate=44100, cells_update_callback=lambda highlighted_cells: None, fft_update_callback=lambda fft_data: None):
+    def __init__(self, audio: pyaudio.PyAudio, threshold_slider: QSlider, bindings: dict[tuple[int, int]: int] = {}, sample_rate=44100, cells_update_callback=lambda highlighted_cells: None):
+        super().__init__()
         self.bindings = bindings
         self.cells_update_callback = cells_update_callback
-        self.fft_update_callback = fft_update_callback
         self.sample_rate = sample_rate
         self.window_length = sample_rate // 4
+        self.buffer_size = sample_rate // 100
         self.stream = audio.open(sample_rate, 1, pyaudio.paFloat32, input=True,
-                                 frames_per_buffer=self.window_length)
+                                 frames_per_buffer=self.buffer_size)
         self.pressed_keys = set()
+        self.threshold_slider = threshold_slider
 
         self.ui = UInput()
 
@@ -122,13 +125,15 @@ class AudioBindingHandler:
         self.__thread.start()
 
     def handler_thread(self):
+        window = np.zeros(self.window_length, dtype=np.float32)
         self.stream.start_stream()
         while not self.__stop:
-            chunk = self.stream.read(self.window_length,
+            chunk = self.stream.read(self.buffer_size,
                                      exception_on_overflow=False)
             audio_data = np.frombuffer(chunk, np.float32)
-            fft_data = abs(np.fft.rfft(audio_data))
-            self.fft_update_callback(fft_data)
+            window = np.concatenate((window[len(audio_data):], audio_data))
+            fft_data = abs(np.fft.rfft(window))
+            self.fft_update_signal.emit(fft_data)
 
             highlighted_cells = set()
             for note_i, octave in self.bindings:  # only check bound notes
@@ -136,7 +141,7 @@ class AudioBindingHandler:
                 freq = music.note_to_freq[octave][note]
                 fft_i = round(freq / self.sample_rate * self.window_length)
                 key = QT_TO_EVDEV_MAP[self.bindings[(note_i, octave)]]
-                if fft_data[fft_i] > 20:
+                if fft_data[fft_i] > self.threshold_slider.value():
                     highlighted_cells.add((note_i, octave))
                     if key not in self.pressed_keys:
                         self.ui.write(ecodes.EV_KEY, key, 1)
