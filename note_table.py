@@ -1,13 +1,13 @@
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 from PySide6.QtGui import QKeyEvent, QKeySequence, QColor
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSettings
 import music
 
 
 class NoteTable(QTableWidget):
     bindings: dict
 
-    def __init__(self, bindings={}):
+    def __init__(self, bindings):
         super().__init__()
         self.setRowCount(music.note_count)
         self.setColumnCount(music.octave_count)
@@ -18,6 +18,7 @@ class NoteTable(QTableWidget):
         self.setWindowTitle("Microphone Controller")
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.settings = QSettings()
         self.bindings = bindings
 
         for octave in range(music.octave_count):
@@ -40,8 +41,10 @@ class NoteTable(QTableWidget):
         key = event.key()
         if key == 0 or key == Qt.Key.Key_Escape:
             self.bindings.pop(cell_location, None)
+            self.settings.setValue("bindings", self.bindings)
         else:
             self.bindings[cell_location] = key
+            self.settings.setValue("bindings", self.bindings)
         self.update_cell(cell_location)
         self.clearSelection()
 

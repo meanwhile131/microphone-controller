@@ -3,7 +3,7 @@ import music
 import numpy as np
 import pyaudio
 from evdev import UInput, ecodes
-from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtCore import Qt, Signal, QObject, QSettings
 from PySide6.QtWidgets import QSlider
 
 
@@ -107,10 +107,13 @@ QT_TO_EVDEV_MAP = {
 class AudioBindingHandler(QObject):
     __stop = False
     fft_update_signal = Signal(np.ndarray)
+    bindings: dict[tuple[int, int]: int]
 
-    def __init__(self, audio: pyaudio.PyAudio, threshold_slider: QSlider, bindings: dict[tuple[int, int]: int] = {}, sample_rate=44100, cells_update_callback=lambda highlighted_cells: None):
+    def __init__(self, audio: pyaudio.PyAudio, threshold_slider: QSlider, sample_rate=44100, cells_update_callback=lambda highlighted_cells: None):
         super().__init__()
-        self.bindings = bindings
+        self.settings = QSettings()
+        bindings = self.settings.value("bindings")
+        self.bindings = bindings if bindings else {}
         self.cells_update_callback = cells_update_callback
         self.sample_rate = sample_rate
         self.window_length = sample_rate // 4
