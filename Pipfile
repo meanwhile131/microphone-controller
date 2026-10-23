@@ -12,6 +12,7 @@ evdev = "*"
 [dev-packages]
 autopep8 = "*"
 pylint = "*"
+pyinstaller = "*"
 
 [requires]
 python_version = "*"

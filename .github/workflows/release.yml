@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install dependencies
+        run: pipenv install --dev
+      - name: Build executable
+        run: pipenv run pyinstaller main.py
+      - name: Upload executable
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/main/main*
+  
+  release:
+    needs: build
+    runs-on: ubuntu-slim
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: files
+          merge-multiple: true
+      - name: Release
+        env:
+          SHA: ${{ github.sha }}
+        run: gh release create --generate-notes ${SHA:0:7} files/*
+
