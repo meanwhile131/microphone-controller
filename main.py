@@ -1,4 +1,5 @@
 import sys
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QVBoxLayout, QMainWindow, QWidget, QSlider, QHBoxLayout
 import matplotlib.pyplot as plt
 import pyaudio
@@ -19,6 +20,7 @@ class MainWindow(QMainWindow):
 
         threshold_slider = QSlider()
         threshold_slider.setMaximum(40)
+        threshold_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.binding_handler = AudioBindingHandler(portaudio, threshold_slider)
         note_table = NoteTable(self.binding_handler.bindings)
