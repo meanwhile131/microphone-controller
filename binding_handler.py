@@ -4,6 +4,7 @@ import numpy as np
 import pyaudio
 from evdev import UInput, ecodes
 from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtWidgets import QSlider
 
 
 QT_TO_EVDEV_MAP = {
