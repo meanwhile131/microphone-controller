@@ -8,6 +8,7 @@ pyside6 = "*"
 matplotlib = "*"
 keyboard = "*"
 sounddevice = "*"
+pywin32-ctypes = "*"
 
 [dev-packages]
 autopep8 = "*"

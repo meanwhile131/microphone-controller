@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "379dc32e8119aa13e904a1fceb4f56bac2d4abb2b131de3a6e43a241b33dac71"
+            "sha256": "965a6d030b54cefb674eda1540c9f69f58c47c70e830dd9ffe81f2c816fac15b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -734,6 +734,15 @@
             ],
             "markers": "python_version >= '2.7' and python_version != '3.0' and python_version != '3.1' and python_version != '3.2'",
             "version": "==2.9.0.post0"
+        },
+        "pywin32-ctypes": {
+            "hashes": [
+                "sha256:8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8",
+                "sha256:d162dc04946d704503b2edc4d55f3dba5c1d539ead017afa00142c38b9885755"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.6'",
+            "version": "==0.2.3"
         },
         "shiboken6": {
             "hashes": [
