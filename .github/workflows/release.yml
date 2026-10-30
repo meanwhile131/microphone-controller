@@ -36,6 +36,7 @@ jobs:
     needs: build
     runs-on: ubuntu-slim
     steps:
+      - uses: actions/checkout@v7
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
