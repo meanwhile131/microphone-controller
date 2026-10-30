@@ -1,7 +1,7 @@
 from threading import Thread
 import music
 import numpy as np
-import pyaudio
+import sounddevice as sd
 import keyboard
 from PySide6.QtCore import Qt, Signal, QObject, QSettings
 from PySide6.QtWidgets import QSlider
@@ -35,22 +35,21 @@ class AudioBindingHandler(QObject):
     __stop = False
     fft_update_signal = Signal(np.ndarray)
     bindings: dict[tuple[int, int]: int]
+    cells_update = Signal(set)
 
-    def __init__(self, audio: pyaudio.PyAudio, threshold_slider: QSlider, sample_rate=44100, cells_update_callback=lambda highlighted_cells: None):
+    def __init__(self, threshold_slider: QSlider):
         super().__init__()
         self.settings = QSettings()
         bindings = self.settings.value("bindings")
         self.bindings = bindings if bindings else {}
-        self.cells_update_callback = cells_update_callback
-        self.sample_rate = sample_rate
-        self.window_length = sample_rate // 4
-        self.buffer_size = sample_rate // 100
         self.pressed_keys = set()
         self.threshold_slider = threshold_slider
 
         try:
-            self.stream = audio.open(sample_rate, 1, pyaudio.paFloat32, input=True,
-                                     frames_per_buffer=self.buffer_size)
+            self.stream = sd.Stream()
+            self.sample_rate = int(self.stream.samplerate)
+            self.window_length = self.sample_rate // 4
+            self.buffer_size = self.sample_rate // 20
             self.__thread = Thread(target=self.handler_thread)
             self.__thread.start()
         except OSError as e:
@@ -58,10 +57,9 @@ class AudioBindingHandler(QObject):
 
     def handler_thread(self):
         window = np.zeros(self.window_length, dtype=np.float32)
-        self.stream.start_stream()
+        self.stream.start()
         while not self.__stop:
-            chunk = self.stream.read(self.buffer_size,
-                                     exception_on_overflow=False)
+            chunk = self.stream.read(self.buffer_size)[0]
             audio_data = np.frombuffer(chunk, np.float32)
             window = np.concatenate((window[len(audio_data):], audio_data))
             fft_data = abs(np.fft.rfft(window))
@@ -83,9 +81,9 @@ class AudioBindingHandler(QObject):
                 if key in self.pressed_keys:
                     keyboard.release(key)
                     self.pressed_keys.remove(key)
-            self.cells_update_callback(highlighted_cells)
+            self.cells_update(highlighted_cells)
 
-        self.stream.stop_stream()
+        self.stream.stop()
         self.ui.close()
 
     def stop_thread(self):

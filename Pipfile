@@ -5,9 +5,9 @@ name = "pypi"
 
 [packages]
 pyside6 = "*"
-pyaudio = "*"
 matplotlib = "*"
 keyboard = "*"
+sounddevice = "*"
 
 [dev-packages]
 autopep8 = "*"
