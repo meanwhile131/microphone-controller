@@ -44,5 +44,6 @@ jobs:
       - name: Release
         env:
           SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: gh release create --generate-notes ${SHA:0:7} files/*
 
