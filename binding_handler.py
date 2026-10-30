@@ -81,10 +81,9 @@ class AudioBindingHandler(QObject):
                 if key in self.pressed_keys:
                     keyboard.release(key)
                     self.pressed_keys.remove(key)
-            self.cells_update(highlighted_cells)
+            self.cells_update.emit(highlighted_cells)
 
         self.stream.stop()
-        self.ui.close()
 
     def stop_thread(self):
         self.__stop = True

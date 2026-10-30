@@ -36,7 +36,6 @@ class MainWindow(QMainWindow):
 
         self.fft_plot = FFTPlot(
             self.binding_handler.window_length, self.binding_handler.sample_rate)
-        self.binding_handler.cells_update = note_table.set_highlighted_cells
         self.binding_handler.fft_update_signal.connect(self.fft_plot.update_plot)
         threshold_slider.valueChanged.connect(self.fft_plot.update_threshold)
         threshold_slider.valueChanged.connect(lambda value: self.settings.setValue("threshold", value))

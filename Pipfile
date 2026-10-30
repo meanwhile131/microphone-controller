@@ -9,6 +9,7 @@ matplotlib = "*"
 keyboard = "*"
 sounddevice = "*"
 pywin32-ctypes = "*"
+pefile = "*"
 
 [dev-packages]
 autopep8 = "*"
