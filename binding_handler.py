@@ -7,6 +7,29 @@ from PySide6.QtCore import Qt, Signal, QObject, QSettings
 from PySide6.QtWidgets import QSlider
 from PySide6.QtGui import QKeySequence
 
+_QT_TO_KEYBOARD = {
+    "space": "space",
+    "shift": "shift",
+    "control": "ctrl",
+    "alt": "alt",
+    "meta": "windows",
+    "return": "enter",
+    "esc": "esc",
+    "ins": "insert",
+    "del": "delete",
+    "capslock": "caps lock",
+    "numlock": "num lock",
+    "scrolllock": "scroll lock",
+    "pgup": "page up",
+    "pgdown": "page down",
+    "home": "home",
+    "end": "end",
+    "menu": "menu",
+    "help": "help",
+    "backspace": "backspace",
+    "tab": "tab",
+}
+
 
 class AudioBindingHandler(QObject):
     __stop = False
@@ -49,7 +72,8 @@ class AudioBindingHandler(QObject):
                 note = music.notes[note_i]
                 freq = music.note_to_freq[octave][note]
                 fft_i = round(freq / self.sample_rate * self.window_length)
-                key = QKeySequence(self.bindings[(note_i, octave)]).toString()
+                key = QKeySequence(self.bindings[(note_i, octave)]).toString().lower()
+                key = _QT_TO_KEYBOARD.get(key, key)
                 if fft_data[fft_i] > self.threshold_slider.value():
                     highlighted_cells.add((note_i, octave))
                     if key not in self.pressed_keys:
