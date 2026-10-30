@@ -68,7 +68,7 @@ class AudioBindingHandler(QObject):
             self.fft_update_signal.emit(fft_data)
 
             highlighted_cells = set()
-            for note_i, octave in self.bindings:  # only check bound notes
+            for note_i, octave in list(self.bindings):  # only check bound notes
                 note = music.notes[note_i]
                 freq = music.note_to_freq[octave][note]
                 fft_i = round(freq / self.sample_rate * self.window_length)
