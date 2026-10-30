@@ -20,3 +20,4 @@ class FFTPlot(FigureCanvasQTAgg):
 
     def update_threshold(self, threshold):
         self.threshold_line.set_ydata([threshold, threshold])
+        self.fig.canvas.draw()

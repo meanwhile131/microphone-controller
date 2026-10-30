@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "adb963b5668de960aa28384681f2b02fab66b0000bd5b03ef7958ad48b6a50b9"
+            "sha256": "17c158287500f7424137e91effa867d93bc9c83707ee9524da6aea6791273d72"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -100,13 +100,6 @@
             "markers": "python_version >= '3.8'",
             "version": "==0.12.1"
         },
-        "evdev": {
-            "hashes": [
-                "sha256:442fb3f4c8dfc9e61e901133c356220c02d663eca8f34722e0cecdd637eba504"
-            ],
-            "index": "pypi",
-            "version": "==2.0.0"
-        },
         "fonttools": {
             "hashes": [
                 "sha256:0781fe22583529e1e98bb8a3a33040632e202a4c427ed7e65412c41a21b8ebcb",
@@ -170,6 +163,14 @@
             ],
             "markers": "python_version >= '3.11'",
             "version": "==4.67.0"
+        },
+        "keyboard": {
+            "hashes": [
+                "sha256:63ed83305955939ca5c9a73755e5cc43e8242263f5ad5fd3bb7e0b032f3d308b",
+                "sha256:8e9c2422f1217e0bd84489b9ecd361027cc78415828f4fe4f88dd4acd587947b"
+            ],
+            "index": "pypi",
+            "version": "==0.13.5"
         },
         "kiwisolver": {
             "hashes": [

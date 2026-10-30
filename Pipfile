@@ -7,7 +7,7 @@ name = "pypi"
 pyside6 = "*"
 pyaudio = "*"
 matplotlib = "*"
-evdev = "*"
+keyboard = "*"
 
 [dev-packages]
 autopep8 = "*"
