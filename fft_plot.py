@@ -1,7 +1,7 @@
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 import numpy as np
 from matplotlib.figure import Figure
-from PySide6.QtCore import Signal
+from PyQt6.QtCore import pyqtSignal
 
 
 class FFTPlot(FigureCanvasQTAgg):

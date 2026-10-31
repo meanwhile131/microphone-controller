@@ -1,6 +1,6 @@
 import sys
-from PySide6.QtCore import Qt, QStandardPaths, QCoreApplication, QSettings, Signal
-from PySide6.QtWidgets import QApplication, QVBoxLayout, QMainWindow, QWidget, QSlider, QHBoxLayout
+from PyQt6.QtCore import Qt, QStandardPaths, QCoreApplication, QSettings, pyqtSignal
+from PyQt6.QtWidgets import QApplication, QVBoxLayout, QMainWindow, QWidget, QSlider, QHBoxLayout
 import matplotlib.pyplot as plt
 from fft_plot import FFTPlot
 from note_table import NoteTable
@@ -10,7 +10,7 @@ app = QApplication(sys.argv)
 
 
 class MainWindow(QMainWindow):
-    cells_update_signal = Signal(set)
+    cells_update_signal = pyqtSignal(set)
 
     def __init__(self):
         super().__init__()

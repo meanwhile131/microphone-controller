@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
-from PySide6.QtGui import QKeyEvent, QKeySequence, QColor
-from PySide6.QtCore import Qt, QSettings, Signal
+from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView
+from PyQt6.QtGui import QKeyEvent, QKeySequence, QColor
+from PyQt6.QtCore import Qt, QSettings, pyqtSignal
 import music
 
 
@@ -13,11 +13,11 @@ class NoteTable(QTableWidget):
         self.setColumnCount(music.octave_count)
         self.setHorizontalHeaderLabels(list(map(str, music.octaves)))
         self.setVerticalHeaderLabels(music.notes)
-        self.setSelectionMode(QTableWidget.SingleSelection)
-        self.setEditTriggers(QTableWidget.NoEditTriggers)  # disable editing
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # disable editing
         self.setWindowTitle("Microphone Controller")
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.settings = QSettings()
         self.bindings = bindings
 

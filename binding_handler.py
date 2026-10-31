@@ -3,9 +3,9 @@ import music
 import numpy as np
 import sounddevice as sd
 import keyboard
-from PySide6.QtCore import Qt, Signal, QObject, QSettings
-from PySide6.QtWidgets import QSlider
-from PySide6.QtGui import QKeySequence
+from PyQt6.QtCore import Qt, pyqtSignal, QObject, QSettings
+from PyQt6.QtWidgets import QSlider
+from PyQt6.QtGui import QKeySequence
 
 _QT_TO_KEYBOARD = {
     "space": "space",
@@ -33,9 +33,9 @@ _QT_TO_KEYBOARD = {
 
 class AudioBindingHandler(QObject):
     __stop = False
-    fft_update_signal = Signal(np.ndarray)
+    fft_update_signal = pyqtSignal(np.ndarray)
     bindings: dict[tuple[int, int]: int]
-    cells_update = Signal(set)
+    cells_update = pyqtSignal(set)
 
     def __init__(self, threshold_slider: QSlider):
         super().__init__()
