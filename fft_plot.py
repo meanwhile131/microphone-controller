@@ -11,13 +11,18 @@ class FFTPlot(FigureCanvasQTAgg):
         all_freq = np.fft.rfftfreq(window_len, d=1/sample_rate)[1:250]
         self.ln, = self.axes.plot(all_freq, np.zeros((len(all_freq,))))
         self.axes.set_ylim(bottom=0, top=40)
-        self.threshold_line = self.axes.axhline(0, color='red')
+        self.press_threshold_line = self.axes.axhline(0, color='red')
+        self.release_threshold_line = self.axes.axhline(0, color='green')
         super().__init__(self.fig)
 
     def update_plot(self, fft_data):
         self.ln.set_ydata(fft_data[1:250])
         self.fig.canvas.draw()
 
-    def update_threshold(self, threshold):
-        self.threshold_line.set_ydata([threshold, threshold])
+    def update_press_threshold(self, threshold):
+        self.press_threshold_line.set_ydata([threshold, threshold])
+        self.fig.canvas.draw()
+
+    def update_release_threshold(self, threshold):
+        self.release_threshold_line.set_ydata([threshold, threshold])
         self.fig.canvas.draw()

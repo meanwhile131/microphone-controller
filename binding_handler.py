@@ -37,13 +37,14 @@ class AudioBindingHandler(QObject):
     bindings: dict[tuple[int, int]: int]
     cells_update = pyqtSignal(set)
 
-    def __init__(self, threshold_slider: QSlider):
+    def __init__(self, press_threshold_slider: QSlider, release_threshold_slider: QSlider):
         super().__init__()
         self.settings = QSettings()
         bindings = self.settings.value("bindings")
         self.bindings = bindings if bindings else {}
         self.pressed_keys = set()
-        self.threshold_slider = threshold_slider
+        self.press_threshold_slider = press_threshold_slider
+        self.release_threshold_slider = release_threshold_slider
 
         try:
             self.stream = sd.Stream()
@@ -72,15 +73,23 @@ class AudioBindingHandler(QObject):
                 fft_i = round(freq / self.sample_rate * self.window_length)
                 key = QKeySequence(self.bindings[(note_i, octave)]).toString().lower()
                 key = _QT_TO_KEYBOARD.get(key, key)
-                if fft_data[fft_i] > self.threshold_slider.value():
-                    highlighted_cells.add((note_i, octave))
-                    if key not in self.pressed_keys:
-                        keyboard.press(key)
-                        self.pressed_keys.add(key)
-                    continue
-                if key in self.pressed_keys:
+
+                pressThreshold = self.press_threshold_slider.value()
+                abovePressThreshold = fft_data[fft_i] > pressThreshold
+                alreadyPressed = key in self.pressed_keys
+                if abovePressThreshold and not alreadyPressed:
+                    keyboard.press(key)
+                    self.pressed_keys.add(key)
+
+                releaseThreshold = self.release_threshold_slider.value()
+                belowReleaseThreshold = fft_data[fft_i] < releaseThreshold
+                if belowReleaseThreshold and alreadyPressed:
                     keyboard.release(key)
                     self.pressed_keys.remove(key)
+
+                if key in self.pressed_keys:
+                    highlighted_cells.add((note_i, octave))
+
             self.cells_update.emit(highlighted_cells)
 
         self.stream.stop()
