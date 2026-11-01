@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
         threshold_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         return threshold_slider
 
-    def stop(self):
+    def closeEvent(self, event):
         self.binding_handler.stop_thread()
 
 
