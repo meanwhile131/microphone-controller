@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtCore import Qt, QStandardPaths, QCoreApplication, QSettings, pyqtSignal
+from PyQt6.QtCore import Qt, QCoreApplication, QSettings, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QMainWindow, QWidget, QSlider, QHBoxLayout
 import matplotlib.pyplot as plt
 from fft_plot import FFTPlot

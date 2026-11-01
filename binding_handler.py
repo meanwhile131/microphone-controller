@@ -3,7 +3,7 @@ import music
 import numpy as np
 import sounddevice as sd
 import keyboard
-from PyQt6.QtCore import Qt, pyqtSignal, QObject, QSettings
+from PyQt6.QtCore import pyqtSignal, QObject, QSettings
 from PyQt6.QtWidgets import QSlider
 from PyQt6.QtGui import QKeySequence
 
