@@ -1,4 +1,2 @@
-
-<video width="320" height="240" controls>
-  <source src="https://www.dropbox.com/scl/fi/kn1zkta9t1elm85wv7a2m/silksong-guitar.mp4?rlkey=vwe2tgeghraekkh4bcm83h6r4&st=lk5i541o&dl=1" type="video/mp4">
-</video>
+## Видео
+[![Видео](https://github.com/user-attachments/assets/d162eb5b-f13b-4830-ad38-6b6a36883ad4)](https://vkvideo.ru/video-236444998_456239046)
