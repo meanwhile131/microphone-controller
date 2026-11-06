@@ -48,13 +48,15 @@ class AudioBindingHandler(QObject):
         self.window_length = 10000
         self.sample_rate = 44100
         self.__thread = None
-        self.start_processing()
+        self.start_processing(self.settings.value("microphone"))
 
     def start_processing(self, device_id=None):
         try:
             if self.__thread:
                 self.stop_thread()
             self.stream = sd.InputStream(device=device_id)
+            if device_id is not None:
+                self.settings.setValue("microphone", device_id)
             self.__stop = False
             print(f'Opened audio for device {device_id}')
             self.sample_rate = int(self.stream.samplerate)
@@ -62,8 +64,14 @@ class AudioBindingHandler(QObject):
             self.buffer_size = self.sample_rate // 20
             self.__thread = Thread(target=self.handler_thread)
             self.__thread.start()
-        except sd.PortAudioError as e:
-            print(f"failed to open audio: {e}")
+        except (sd.PortAudioError, ValueError) as e:
+            print(f"failed to open audio for device {device_id}: {e}")
+            if device_id is not None:
+                saved = self.settings.value("microphone")
+                if saved == device_id:
+                    self.settings.remove("microphone")
+                    saved = None
+                self.start_processing(saved)
 
     def handler_thread(self):
         window = np.zeros(self.window_length, dtype=np.float32)

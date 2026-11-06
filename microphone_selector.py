@@ -1,10 +1,10 @@
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QComboBox, QDialogButtonBox
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, QSettings
 import sounddevice as sd
 
 
 class MicrophoneSelectionDialog(QDialog):
-    microphone_selected = pyqtSignal(int)
+    microphone_selected = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -18,6 +18,9 @@ class MicrophoneSelectionDialog(QDialog):
         input_devices = filter(lambda device: device["max_input_channels"] > 0, sd.query_devices())
         for device in input_devices:
             self.microphone_selector.addItem(device["name"], device["index"])
+        saved = QSettings().value("microphone")
+        if saved:
+            self.microphone_selector.setCurrentText(saved)
 
         buttons = QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         self.button_box = QDialogButtonBox(buttons, self)
@@ -27,5 +30,5 @@ class MicrophoneSelectionDialog(QDialog):
         self.button_box.accepted.connect(self.select_microphone)
 
     def select_microphone(self):
-        self.microphone_selected.emit(self.microphone_selector.currentData())
+        self.microphone_selected.emit(self.microphone_selector.currentText())
         self.close()
