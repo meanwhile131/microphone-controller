@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
 
     def choose_microphone(self):
         dialog = MicrophoneSelectionDialog()
+        dialog.microphone_selected.connect(lambda device_id: self.binding_handler.start_processing(device_id))
         dialog.exec()
 
 
