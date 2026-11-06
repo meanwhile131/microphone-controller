@@ -33,11 +33,11 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v6
       - name: Compile Presentation
-        run: npx @marp-team/marp-cli@latest slides.md -o index.html
+        run: npx @marp-team/marp-cli@latest slides.md -o dest/index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: 'index.html'
+          path: 'dest'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
