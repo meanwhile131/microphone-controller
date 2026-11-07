@@ -1,10 +1,12 @@
 import sys
 from PyQt6.QtCore import Qt, QCoreApplication, QSettings, pyqtSignal
-from PyQt6.QtWidgets import QApplication, QVBoxLayout, QMainWindow, QWidget, QSlider, QHBoxLayout
+from PyQt6.QtWidgets import QApplication, QVBoxLayout, QMainWindow, QWidget, QSlider, QHBoxLayout, QDialog, QMenuBar, QComboBox, QDialogButtonBox
+from PyQt6.QtGui import QAction
 import matplotlib.pyplot as plt
 from fft_plot import FFTPlot
 from note_table import NoteTable
 from binding_handler import AudioBindingHandler
+from microphone_selector import MicrophoneSelectionDialog
 
 
 class MainWindow(QMainWindow):
@@ -15,6 +17,12 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         plt.ion()
+
+        menu_bar = self.menuBar()
+        audio_menu = menu_bar.addMenu("Audio")
+        choose_microphone_action = QAction("Select Microphone", self)
+        choose_microphone_action.triggered.connect(self.choose_microphone)
+        audio_menu.addAction(choose_microphone_action)
 
         press_threshold_slider = self.create_threshold_slider()
         release_threshold_slider = self.create_threshold_slider()
@@ -59,6 +67,11 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.binding_handler.stop_thread()
+
+    def choose_microphone(self):
+        dialog = MicrophoneSelectionDialog()
+        dialog.microphone_selected.connect(lambda device_id: self.binding_handler.start_processing(device_id))
+        dialog.exec()
 
 
 def main():

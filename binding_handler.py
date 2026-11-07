@@ -32,7 +32,6 @@ _QT_TO_KEYBOARD = {
 
 
 class AudioBindingHandler(QObject):
-    __stop = False
     fft_update_signal = pyqtSignal(np.ndarray)
     bindings: dict[tuple[int, int]: int]
     cells_update = pyqtSignal(set)
@@ -46,15 +45,33 @@ class AudioBindingHandler(QObject):
         self.press_threshold_slider = press_threshold_slider
         self.release_threshold_slider = release_threshold_slider
 
+        self.window_length = 10000
+        self.sample_rate = 44100
+        self.__thread = None
+        self.start_processing(self.settings.value("microphone"))
+
+    def start_processing(self, device_id=None):
         try:
-            self.stream = sd.Stream()
+            if self.__thread:
+                self.stop_thread()
+            self.stream = sd.InputStream(device=device_id)
+            if device_id is not None:
+                self.settings.setValue("microphone", device_id)
+            self.__stop = False
+            print(f'Opened audio for device {device_id}')
             self.sample_rate = int(self.stream.samplerate)
             self.window_length = self.sample_rate // 4
             self.buffer_size = self.sample_rate // 20
             self.__thread = Thread(target=self.handler_thread)
             self.__thread.start()
-        except OSError as e:
-            print(f"failed to open audio: {e}")
+        except (sd.PortAudioError, ValueError) as e:
+            print(f"failed to open audio for device {device_id}: {e}")
+            if device_id is not None:
+                saved = self.settings.value("microphone")
+                if saved == device_id:
+                    self.settings.remove("microphone")
+                    saved = None
+                self.start_processing(saved)
 
     def handler_thread(self):
         window = np.zeros(self.window_length, dtype=np.float32)
