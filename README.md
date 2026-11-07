@@ -9,4 +9,4 @@
 7. Играйте ноты чтобы нажимать клавиши
 
 ## Видео
-[![Видео](https://github.com/user-attachments/assets/d162eb5b-f13b-4830-ad38-6b6a36883ad4)](https://vkvideo.ru/video-236444998_456239046)
+[Видео](https://github.com/user-attachments/assets/3dce0296-d456-42d0-a3da-5278636abed4)
