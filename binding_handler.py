@@ -4,8 +4,9 @@ import numpy as np
 import sounddevice as sd
 import keyboard
 from PyQt6.QtCore import pyqtSignal, QObject, QSettings
-from PyQt6.QtWidgets import QSlider
+from PyQt6.QtWidgets import QSlider, QMainWindow, QApplication
 from PyQt6.QtGui import QKeySequence
+import math
 
 _QT_TO_KEYBOARD = {
     "space": "space",
@@ -88,18 +89,20 @@ class AudioBindingHandler(QObject):
                 note = music.notes[note_i]
                 freq = music.note_to_freq[octave][note]
                 fft_i = round(freq / self.sample_rate * self.window_length)
+                value = fft_data[fft_i] * math.sqrt(freq)  # pink noise compensation
                 key = QKeySequence(self.bindings[(note_i, octave)]).toString().lower()
                 key = _QT_TO_KEYBOARD.get(key, key)
 
                 pressThreshold = self.press_threshold_slider.value()
-                abovePressThreshold = fft_data[fft_i] > pressThreshold
+                abovePressThreshold = value > pressThreshold
                 alreadyPressed = key in self.pressed_keys
-                if abovePressThreshold and not alreadyPressed:
+                isFocused = QApplication.activeWindow() is not None
+                if abovePressThreshold and not alreadyPressed and not isFocused:
                     keyboard.press(key)
                     self.pressed_keys.add(key)
 
                 releaseThreshold = self.release_threshold_slider.value()
-                belowReleaseThreshold = fft_data[fft_i] < releaseThreshold
+                belowReleaseThreshold = value < releaseThreshold
                 if belowReleaseThreshold and alreadyPressed:
                     keyboard.release(key)
                     self.pressed_keys.remove(key)
