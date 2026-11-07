@@ -77,11 +77,15 @@ class AudioBindingHandler(QObject):
     def handler_thread(self):
         window = np.zeros(self.window_length, dtype=np.float32)
         self.stream.start()
+        fft_frequencies = np.fft.rfftfreq(self.window_length, d=1/self.sample_rate)
+        pink_noise_correction = np.ones(len(fft_frequencies))
+        pink_noise_correction[1:] = np.sqrt(fft_frequencies[1:])
+        pink_noise_correction[1:] /= np.mean(pink_noise_correction[1:])
         while not self.__stop:
             chunk = self.stream.read(self.buffer_size)[0]
             audio_data = np.frombuffer(chunk, np.float32)
             window = np.concatenate((window[len(audio_data):], audio_data))
-            fft_data = abs(np.fft.rfft(window))
+            fft_data = abs(np.fft.rfft(window)) * pink_noise_correction
             self.fft_update_signal.emit(fft_data)
 
             highlighted_cells = set()
@@ -89,7 +93,7 @@ class AudioBindingHandler(QObject):
                 note = music.notes[note_i]
                 freq = music.note_to_freq[octave][note]
                 fft_i = round(freq / self.sample_rate * self.window_length)
-                value = fft_data[fft_i] * math.sqrt(freq)  # pink noise compensation
+                value = fft_data[fft_i]
                 key = QKeySequence(self.bindings[(note_i, octave)]).toString().lower()
                 key = _QT_TO_KEYBOARD.get(key, key)
 
@@ -97,8 +101,9 @@ class AudioBindingHandler(QObject):
                 abovePressThreshold = value > pressThreshold
                 alreadyPressed = key in self.pressed_keys
                 isFocused = QApplication.activeWindow() is not None
-                if abovePressThreshold and not alreadyPressed and not isFocused:
-                    keyboard.press(key)
+                if abovePressThreshold and not alreadyPressed:
+                    if not isFocused:
+                        keyboard.press(key)
                     self.pressed_keys.add(key)
 
                 releaseThreshold = self.release_threshold_slider.value()
