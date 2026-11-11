@@ -16,12 +16,12 @@ class FFTPlot(FigureCanvasQTAgg):
 
     def update_plot(self, fft_data):
         self.ln.set_ydata(fft_data[1:250])
-        self.fig.canvas.draw()
+        self.fig.canvas.draw_idle()
 
     def update_press_threshold(self, threshold):
         self.press_threshold_line.set_ydata([threshold, threshold])
-        self.fig.canvas.draw()
+        self.fig.canvas.draw_idle()
 
     def update_release_threshold(self, threshold):
         self.release_threshold_line.set_ydata([threshold, threshold])
-        self.fig.canvas.draw()
+        self.fig.canvas.draw_idle()
